@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openai-deployment
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: openai-flask
+  template:
+    metadata:
+      labels:
+        app: openai-flask
+    spec:
+      containers:
+      - name: openai-flask
+        image: solomony/openai-flask:v1
+        ports:
+        - containerPort: 5000
+        env:
+        - name: OPENAI_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: openai-secret
+              key: OPENAI_API_KEY

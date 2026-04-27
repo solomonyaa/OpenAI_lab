@@ -1,23 +1,31 @@
+from flask import Flask, request, jsonify
 from openai import OpenAI
 
-# Initialize the client
-# client = OpenAI(api_key="your_api_key_here")
+app = Flask(__name__)
 client = OpenAI()
 
-# A single interaction (The "Stateless" way)
-response = client.chat.completions.create(
-    model="gpt-4o",  # or "gpt-3.5-turbo"
-    messages=[
-        {"role": "system", "content": "You are a helpful assistant."},
-        {"role": "user", "content": "Please explain how a quantum computer works."}
-    ],
-    # SECURITY TIP: 
-    # Setting store to False (if available in your tier) tells OpenAI 
-    # not to persist this specific message in their 'History' dashboard.
-    store=False, 
-    temperature=0.3
-)
+@app.route('/')
+def home():
+    return '''
+        <form method="POST" action="/ask">
+            <input type="text" name="question" placeholder="Ask me anything..." size="50">
+            <button type="submit">Ask</button>
+        </form>
+    '''
 
-# Printing the result
-print(response.choices[0].message.content)
+@app.route('/ask', methods=['POST'])
+def ask():
+    question = request.form['question']
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": question}
+        ],
+        temperature=0.3
+    )
+    answer = response.choices[0].message.content
+    return f"<p><b>Q:</b> {question}</p><p><b>A:</b> {answer}</p><a href='/'>Back</a>"
 
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
